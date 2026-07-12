@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HumanoidDog — Field Notes</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cousine&family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0E1210;
+      --text: #D9E2DA;
+      --footer: #8FA59A;
+      --card-bg: #151C18;
+      --card-border: #2A3A30;
+      --accent: #7ECBA1;
+      --muted: #8FA59A;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Cousine', monospace;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 40px 20px 20px;
+      text-align: center;
+    }
+
+    header a {
+      display: inline-block;
+    }
+
+    header img.logo {
+      width: 180px;
+      height: auto;
+      opacity: 0.9;
+    }
+
+    .page-title {
+      font-family: 'Cousine', monospace;
+      font-size: 1.4rem;
+      font-weight: 400;
+      text-align: center;
+      margin: 0 0 8px;
+      color: var(--accent);
+    }
+
+    .page-subtitle {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 300;
+      font-size: 1rem;
+      text-align: center;
+      color: var(--muted);
+      margin: 0 0 48px;
+      padding: 0 20px;
+    }
+
+    .entries {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .entry {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 24px;
+    }
+
+    .entry-category {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .entry-title {
+      font-size: 1.1rem;
+      font-weight: 400;
+      margin: 0 0 16px;
+    }
+
+    .entry-video {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%;
+      margin-bottom: 16px;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .entry-video iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .entry-meta {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 300;
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .entry-meta strong {
+      color: var(--text);
+      font-weight: 400;
+    }
+
+    .entry-why {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--card-border);
+      font-family: 'Nunito', sans-serif;
+      font-weight: 300;
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 12px;
+      width: 100%;
+      text-align: center;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+      color: var(--footer);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .footer a {
+      color: inherit;
+      text-decoration: none;
+      pointer-events: auto;
+    }
+
+    @media (max-width: 480px) {
+      .page-title {
+        font-size: 1.2rem;
+      }
+
+      .entry {
+        padding: 16px;
+      }
+
+      header img.logo {
+        width: 140px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <a href="index.html">
+      <img src="logo.png" alt="HumanoidDog" class="logo" />
+    </a>
+  </header>
+
+  <h2 class="page-title">Field Notes</h2>
+  <p class="page-subtitle">Experiments I love. Playful tech, clever builds, creative mischief.</p>
+
+  <div class="entries">
+
+    <article class="entry">
+      <div class="entry-category">LEGO Engineering / Playful Builds</div>
+      <h3 class="entry-title">LEGO Rocket Build</h3>
+      <div class="entry-video">
+        <iframe
+          src="https://www.youtube.com/embed/Q0v7qYw2xJc"
+          title="LEGO Rocket Build"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <div class="entry-meta">
+        <strong>Tone:</strong> Hands-on, approachable, creative
+      </div>
+      <div class="entry-why">
+        Why it's HumanoidDog: Simple tools + imagination = delightful builds.
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="entry-category">RC Engineering / Outdoor Builds</div>
+      <h3 class="entry-title">RC Rally Lap with Traxxas Slash</h3>
+      <div class="entry-video">
+        <iframe
+          src="https://www.youtube.com/embed/Yf8kzjK8Q0A"
+          title="RC Rally Lap with Traxxas Slash"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <div class="entry-meta">
+        <strong>Tone:</strong> Fast, playful, tool-driven
+      </div>
+      <div class="entry-why">
+        Why it's HumanoidDog: RC culture is pure tinkering joy — tools that move.
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="entry-category">Home Music Tech / LEGO Instruments</div>
+      <h3 class="entry-title">Musical LEGO Hand</h3>
+      <div class="entry-video">
+        <iframe
+          src="https://www.youtube.com/embed/Ff7uG8eG8nE"
+          title="Musical LEGO Hand"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <div class="entry-meta">
+        <strong>Tone:</strong> Whimsical, inventive, handmade
+      </div>
+      <div class="entry-why">
+        Why it's HumanoidDog: Music + tools + play = creative experimentation at its best.
+      </div>
+    </article>
+
+  </div>
+
+  <div class="footer">
+    © 2026 <a href="https://craz.com">Crabtree Labz</a>
+  </div>
+</body>
+</html>
