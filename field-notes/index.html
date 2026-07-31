@@ -283,6 +283,7 @@
     }
 
     .content-inner pre {
+      position: relative;
       background: var(--code-bg);
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -302,6 +303,53 @@
 
     .content-inner .comment {
       color: var(--text-muted);
+    }
+
+    /* Copy button */
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s, background 0.15s, color 0.15s;
+      padding: 0;
+    }
+
+    .content-inner pre:hover .copy-btn {
+      opacity: 1;
+    }
+
+    .copy-btn:hover {
+      background: var(--accent-dim);
+      color: var(--bg);
+      border-color: var(--accent-dim);
+    }
+
+    .copy-btn.copied {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: var(--accent);
+      opacity: 1;
+    }
+
+    .copy-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     /* Expandable sub-notes */
@@ -389,10 +437,7 @@
 
     .tt .tt-bubble {
       display: none;
-      position: absolute;
-      bottom: calc(100% + 6px);
-      left: 50%;
-      transform: translateX(-50%);
+      position: fixed;
       background: var(--bg-card);
       color: var(--text);
       border: 1px solid var(--border);
@@ -402,7 +447,7 @@
       line-height: 1.5;
       width: max-content;
       max-width: 300px;
-      z-index: 500;
+      z-index: 10000;
       pointer-events: none;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       white-space: normal;
@@ -421,26 +466,11 @@
       border-top-color: var(--border);
     }
 
-    .tt:hover .tt-bubble {
-      display: block;
-    }
-
-    @media (max-width: 768px) {
-      .tt .tt-bubble {
-        position: fixed;
-        bottom: auto;
-        top: auto;
-        left: 16px;
-        right: 16px;
-        transform: none;
-        width: auto;
-        max-width: none;
-        bottom: 80px;
-      }
-
-      .tt .tt-bubble::after {
-        display: none;
-      }
+    .tt .tt-bubble.tt-below::after {
+      top: auto;
+      bottom: 100%;
+      border-top-color: transparent;
+      border-bottom-color: var(--border);
     }
 
     /* Mobile nav toggle */
@@ -620,6 +650,7 @@
           if (xhr.status === 200) {
             inner.innerHTML = xhr.responseText;
             bindExpandables();
+            bindCopyButtons();
             applyTooltips();
           } else {
             inner.innerHTML = '<div class="welcome"><h2>Not Found</h2><p>Could not load cheat: ' + escHtml(file) + '</p></div>';
@@ -638,6 +669,69 @@
           this.parentElement.classList.toggle('open');
         };
       }
+    }
+
+    function bindCopyButtons() {
+      var copyIcon = '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+      var checkIcon = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+      var pres = document.querySelectorAll('.content-inner pre');
+      for (var i = 0; i < pres.length; i++) {
+        var pre = pres[i];
+        if (pre.querySelector('.copy-btn')) continue;
+        var btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.title = 'Copy';
+        btn.innerHTML = copyIcon;
+        btn.onclick = (function(preEl, btnEl) {
+          return function(e) {
+            e.preventDefault();
+            var code = preEl.querySelector('code');
+            var text = (code || preEl).textContent;
+            navigator.clipboard.writeText(text).then(function() {
+              btnEl.classList.add('copied');
+              btnEl.innerHTML = checkIcon;
+              setTimeout(function() {
+                btnEl.classList.remove('copied');
+                btnEl.innerHTML = copyIcon;
+              }, 1500);
+            });
+          };
+        })(pre, btn);
+        pre.appendChild(btn);
+      }
+    }
+
+    function bindTooltipHovers() {
+      var container = document.getElementById('contentInner');
+      container.addEventListener('mouseover', function(e) {
+        var tt = e.target.closest('.tt');
+        if (!tt) return;
+        var bubble = tt.querySelector('.tt-bubble');
+        if (!bubble || bubble.style.display === 'block') return;
+        bubble.style.display = 'block';
+        var rect = tt.getBoundingClientRect();
+        var bw = bubble.offsetWidth;
+        var bh = bubble.offsetHeight;
+        var top = rect.top - bh - 8;
+        var left = rect.left + rect.width / 2 - bw / 2;
+        if (top < 8) {
+          top = rect.bottom + 8;
+          bubble.classList.add('tt-below');
+        } else {
+          bubble.classList.remove('tt-below');
+        }
+        if (left < 8) left = 8;
+        if (left + bw > window.innerWidth - 8) left = window.innerWidth - 8 - bw;
+        bubble.style.top = top + 'px';
+        bubble.style.left = left + 'px';
+      });
+      container.addEventListener('mouseout', function(e) {
+        var tt = e.target.closest('.tt');
+        if (!tt) return;
+        if (tt.contains(e.relatedTarget)) return;
+        var bubble = tt.querySelector('.tt-bubble');
+        if (bubble) bubble.style.display = 'none';
+      });
     }
 
     function escHtml(s) {
@@ -800,6 +894,7 @@
 
     /* ── Init ───────────────────────────────────────────────── */
     buildNav();
+    bindTooltipHovers();
   </script>
 </body>
 </html>
