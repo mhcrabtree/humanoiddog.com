@@ -1,0 +1,284 @@
+<h1>SSM Cheat Sheet</h1>
+
+<p>AWS CLI workflows for SSM sessions, port forwarding, RDS tunneling, and S3 operations. SSO is assumed to be already configured.</p>
+
+<div class="note-box">
+  <strong>Prerequisites:</strong> AWS CLI v2, Session Manager plugin installed, SSO profile configured, bastion instance running.
+</div>
+
+<h2>Log Into SSO</h2>
+
+<pre><code><span class="comment"># Authenticate (opens browser)</span>
+aws sso login --profile my-dev
+
+<span class="comment"># Verify identity</span>
+aws sts get-caller-identity --profile my-dev
+</code></pre>
+
+<h2>Start an SSM Session (Shell Access)</h2>
+
+<pre><code><span class="comment"># Connect to the bastion</span>
+aws ssm start-session \
+  --target i-0abc123def456 \
+  --profile my-dev
+</code></pre>
+
+<h2>Internal Website Tunnel (Port Forwarding)</h2>
+
+<p>Forward a local port to a remote host accessible from the bastion. Useful for internal dashboards, admin panels, or services behind the VPC.</p>
+
+<pre><code><span class="comment"># Forward local:8080 to internal-app.private:80 via the bastion</span>
+aws ssm start-session \
+  --target i-0abc123def456 \
+  --document-name AWS-StartPortForwardingSessionToRemoteHost \
+  --parameters '{
+    "host": ["internal-app.private"],
+    "portNumber": ["80"],
+    "localPortNumber": ["8080"]
+  }' \
+  --profile my-dev
+</code></pre>
+
+<p>Then open <code>http://localhost:8080</code> in your browser.</p>
+
+<h2>MariaDB Tunnel to EC2</h2>
+
+<p>If MariaDB is running directly on an EC2 instance:</p>
+
+<pre><code><span class="comment"># Forward local:3306 to the EC2 instance's MariaDB (localhost:3306)</span>
+aws ssm start-session \
+  --target i-0abc123def456 \
+  --document-name AWS-StartPortForwardingSession \
+  --parameters '{
+    "portNumber": ["3306"],
+    "localPortNumber": ["3306"]
+  }' \
+  --profile my-dev
+</code></pre>
+
+<p>Connect with your database client:</p>
+
+<pre><code><span class="comment"># Connect via the tunnel</span>
+mysql -h 127.0.0.1 -P 3306 -u dbuser -p
+</code></pre>
+
+<h2>RDS Tunnel Using the Bastion</h2>
+
+<p>For an RDS instance that's only accessible within the VPC, use the bastion as a jump host:</p>
+
+<pre><code><span class="comment"># Forward local:3306 to RDS endpoint via bastion</span>
+aws ssm start-session \
+  --target i-0abc123def456 \
+  --document-name AWS-StartPortForwardingSessionToRemoteHost \
+  --parameters '{
+    "host": ["my-db.cluster-abc123.us-east-1.rds.amazonaws.com"],
+    "portNumber": ["3306"],
+    "localPortNumber": ["3306"]
+  }' \
+  --profile my-dev
+</code></pre>
+
+<p>Connect with your database client:</p>
+
+<pre><code><span class="comment"># Connect to RDS through the tunnel</span>
+mysql -h 127.0.0.1 -P 3306 -u admin -p
+
+<span class="comment"># Or with a GUI client, use:</span>
+<span class="comment">#   Host: 127.0.0.1</span>
+<span class="comment">#   Port: 3306</span>
+<span class="comment">#   User: admin</span>
+</code></pre>
+
+<div class="note-box">
+  <strong>Tip:</strong> If port 3306 is already in use locally, change <code>localPortNumber</code> to something else (e.g., <code>13306</code>) and connect to <code>127.0.0.1:13306</code>.
+</div>
+
+<h2>Listing and Navigating S3 Files</h2>
+
+<pre><code><span class="comment"># List all buckets</span>
+aws s3 ls --profile my-dev
+
+<span class="comment"># List contents of a bucket</span>
+aws s3 ls s3://my-bucket/ --profile my-dev
+
+<span class="comment"># List with human-readable sizes</span>
+aws s3 ls s3://my-bucket/path/ --human-readable --summarize --profile my-dev
+
+<span class="comment"># Recursive listing</span>
+aws s3 ls s3://my-bucket/ --recursive --profile my-dev
+</code></pre>
+
+<h2>Downloading Files from S3 to EC2</h2>
+
+<p>Once connected to the bastion via SSM session:</p>
+
+<pre><code><span class="comment"># Download a single file</span>
+aws s3 cp s3://my-bucket/path/file.csv /tmp/file.csv
+
+<span class="comment"># Download a directory</span>
+aws s3 cp s3://my-bucket/path/ /tmp/data/ --recursive
+
+<span class="comment"># Sync a directory (only downloads changed files)</span>
+aws s3 sync s3://my-bucket/path/ /tmp/data/
+
+<span class="comment"># Download with a filter</span>
+aws s3 cp s3://my-bucket/logs/ /tmp/logs/ --recursive --exclude "*" --include "*.gz"
+</code></pre>
+
+<div class="note-box">
+  <strong>Note:</strong> S3 commands on the bastion use the <strong>EC2 instance role</strong>, not your SSO profile. The bastion's role must have S3 permissions for the target bucket.
+</div>
+
+<!-- ── Expandable Sub-Notes ────────────────────────────────── -->
+
+<div class="expandable">
+  <div class="expandable-header">
+    <span class="exp-arrow">&#9654;</span> Required EC2 IAM Role
+  </div>
+  <div class="expandable-body">
+    <p>The bastion EC2 instance needs this role attached via an instance profile:</p>
+    <pre><code>Role: bastion-ssm-role
+Managed Policies:
+  - AmazonSSMManagedInstanceCore
+
+Inline Policy (bastion-s3-access):
+  s3:GetObject, s3:ListBucket, s3:PutObject
+  scoped to specific bucket ARNs</code></pre>
+    <p>The EC2 role does <strong>not</strong> need SSO, STS, or RDS IAM policies for standard operations.</p>
+  </div>
+</div>
+
+<div class="expandable">
+  <div class="expandable-header">
+    <span class="exp-arrow">&#9654;</span> Minimum SOC2-Friendly Policies
+  </div>
+  <div class="expandable-body">
+    <p>For SOC2, scope all permissions tightly:</p>
+    <pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SSMSessions",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:StartSession",
+        "ssm:TerminateSession",
+        "ssm:ResumeSession"
+      ],
+      "Resource": [
+        "arn:aws:ec2:us-east-1:123456789012:instance/i-0abc*",
+        "arn:aws:ssm:*:*:document/AWS-StartSSHSession",
+        "arn:aws:ssm:*:*:document/AWS-StartPortForwardingSession",
+        "arn:aws:ssm:*:*:document/AWS-StartPortForwardingSessionToRemoteHost"
+      ]
+    },
+    {
+      "Sid": "S3Scoped",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::my-bucket",
+        "arn:aws:s3:::my-bucket/*"
+      ]
+    },
+    {
+      "Sid": "DescribeOnly",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ssm:DescribeInstanceInformation",
+        "ssm:DescribeSessions"
+      ],
+      "Resource": "*"
+    }
+  ]
+}</code></pre>
+  </div>
+</div>
+
+<div class="expandable">
+  <div class="expandable-header">
+    <span class="exp-arrow">&#9654;</span> Required SSO Identity Policies
+  </div>
+  <div class="expandable-body">
+    <p>Your SSO permission set needs these actions for SSM workflows:</p>
+    <ul>
+      <li><code>ssm:StartSession</code> — start a shell or port-forward session</li>
+      <li><code>ssm:TerminateSession</code> — cleanly end sessions</li>
+      <li><code>ssm:ResumeSession</code> — reconnect to a dropped session</li>
+      <li><code>ssm:DescribeSessions</code> — list active sessions</li>
+      <li><code>ssm:DescribeInstanceInformation</code> — check if instances are SSM-managed</li>
+      <li><code>ec2:DescribeInstances</code> — look up instance metadata</li>
+    </ul>
+    <p>For S3 operations from your local machine (not the bastion), add scoped S3 actions to the permission set as well.</p>
+  </div>
+</div>
+
+<div class="expandable">
+  <div class="expandable-header">
+    <span class="exp-arrow">&#9654;</span> Local Environment Configuration
+  </div>
+  <div class="expandable-body">
+    <h3>Install the Session Manager Plugin</h3>
+    <pre><code><span class="comment"># macOS</span>
+brew install --cask session-manager-plugin
+
+<span class="comment"># Linux (Debian/Ubuntu)</span>
+curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o session-manager-plugin.deb
+sudo dpkg -i session-manager-plugin.deb
+
+<span class="comment"># Verify</span>
+session-manager-plugin --version</code></pre>
+
+    <h3>AWS CLI Config (~/.aws/config)</h3>
+    <pre><code>[profile my-dev]
+sso_session = my-sso
+sso_account_id = 123456789012
+sso_role_name = DevAccess
+region = us-east-1
+
+[sso-session my-sso]
+sso_start_url = https://d-1234567890.awsapps.com/start
+sso_region = us-east-1
+sso_registration_scopes = sso:account:access</code></pre>
+
+    <h3>Shell Alias (optional)</h3>
+    <pre><code><span class="comment"># Add to ~/.zshrc or ~/.bashrc</span>
+alias bastion='aws ssm start-session --target i-0abc123def456 --profile my-dev'
+alias rds-tunnel='aws ssm start-session --target i-0abc123def456 --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters '\''{"host":["my-db.cluster-abc123.us-east-1.rds.amazonaws.com"],"portNumber":["3306"],"localPortNumber":["3306"]}'\'' --profile my-dev'</code></pre>
+  </div>
+</div>
+
+<div class="expandable">
+  <div class="expandable-header">
+    <span class="exp-arrow">&#9654;</span> EC2 Configuration
+  </div>
+  <div class="expandable-body">
+    <p>Bastion instance requirements:</p>
+    <ul>
+      <li><strong>AMI:</strong> Amazon Linux 2023 (SSM Agent pre-installed)</li>
+      <li><strong>Instance type:</strong> <code>t3.micro</code> or <code>t3.nano</code></li>
+      <li><strong>Public IP:</strong> None</li>
+      <li><strong>Key pair:</strong> None (SSM only)</li>
+      <li><strong>IMDSv2:</strong> Required (<code>HttpTokens=required</code>)</li>
+      <li><strong>IAM Role:</strong> <code>bastion-ssm-role</code> with <code>AmazonSSMManagedInstanceCore</code></li>
+    </ul>
+
+    <h3>Verify SSM Agent Status</h3>
+    <pre><code><span class="comment"># From your local machine</span>
+aws ssm describe-instance-information \
+  --filters "Key=InstanceIds,Values=i-0abc123def456" \
+  --query "InstanceInformationList[0].PingStatus" \
+  --output text --profile my-dev
+
+<span class="comment"># Should return: Online</span></code></pre>
+
+    <h3>Restart SSM Agent (if needed)</h3>
+    <pre><code><span class="comment"># If you have shell access via another method:</span>
+sudo systemctl restart amazon-ssm-agent
+sudo systemctl status amazon-ssm-agent</code></pre>
+  </div>
+</div>

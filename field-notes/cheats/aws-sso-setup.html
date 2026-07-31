@@ -1,0 +1,217 @@
+<h1>Setting Up AWS SSO (Identity Center)</h1>
+
+<p>Complete workflow for configuring AWS IAM Identity Center with a single identity, permission sets, and AWS CLI SSO integration.</p>
+
+<h2><span class="step-num">1</span>Create an Identity Center Instance</h2>
+
+<p>Navigate to <strong>IAM Identity Center</strong> in the AWS Console (or use the CLI).</p>
+
+<pre><code><span class="comment"># Enable Identity Center (requires Organizations)</span>
+aws sso-admin create-instance \
+  --name "my-org-sso"
+</code></pre>
+
+<div class="note-box">
+  <strong>Note:</strong> Identity Center requires AWS Organizations. If you're on a standalone account, you'll be prompted to create an organization first.
+</div>
+
+<p>After creation, note your <strong>SSO Start URL</strong> and <strong>SSO Region</strong> — you'll need both for CLI configuration.</p>
+
+<h2><span class="step-num">2</span>Configure a Single Identity</h2>
+
+<p>Create a user in the Identity Center directory:</p>
+
+<ol>
+  <li>Go to <strong>Users</strong> &rarr; <strong>Add user</strong></li>
+  <li>Enter email, first name, last name</li>
+  <li>The user receives an email to set their password</li>
+  <li>Optionally enable MFA (recommended for SOC2)</li>
+</ol>
+
+<pre><code><span class="comment"># Verify the user was created</span>
+aws identitystore list-users \
+  --identity-store-id d-1234567890
+</code></pre>
+
+<h2><span class="step-num">3</span>Create and Assign Permission Sets</h2>
+
+<p>Permission sets define what a user can do when they assume a role in an AWS account.</p>
+
+<pre><code><span class="comment"># Create a permission set</span>
+aws sso-admin create-permission-set \
+  --instance-arn arn:aws:sso:::instance/ssoins-1234567890 \
+  --name "DevAccess" \
+  --session-duration PT8H
+</code></pre>
+
+<p>Attach managed policies for the minimum access needed:</p>
+
+<pre><code><span class="comment"># CLI access — allows basic AWS CLI operations</span>
+aws sso-admin attach-managed-policy-to-permission-set \
+  --instance-arn arn:aws:sso:::instance/ssoins-1234567890 \
+  --permission-set-arn arn:aws:sso:::permissionSet/ssoins-1234567890/ps-abcdef \
+  --managed-policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess
+
+<span class="comment"># SSM access — required for session manager</span>
+aws sso-admin attach-managed-policy-to-permission-set \
+  --instance-arn arn:aws:sso:::instance/ssoins-1234567890 \
+  --permission-set-arn arn:aws:sso:::permissionSet/ssoins-1234567890/ps-abcdef \
+  --managed-policy-arn arn:aws:iam::aws:policy/AmazonSSMFullAccess
+
+<span class="comment"># EC2 access — for launching/managing instances</span>
+aws sso-admin attach-managed-policy-to-permission-set \
+  --instance-arn arn:aws:sso:::instance/ssoins-1234567890 \
+  --permission-set-arn arn:aws:sso:::permissionSet/ssoins-1234567890/ps-abcdef \
+  --managed-policy-arn arn:aws:iam::aws:policy/AmazonEC2FullAccess
+
+<span class="comment"># S3 access — scoped to specific buckets via inline policy (see sub-note)</span>
+aws sso-admin put-inline-policy-to-permission-set \
+  --instance-arn arn:aws:sso:::instance/ssoins-1234567890 \
+  --permission-set-arn arn:aws:sso:::permissionSet/ssoins-1234567890/ps-abcdef \
+  --inline-policy '{
+    "Version": "2012-10-17",
+    "Statement": [{
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:ListBucket", "s3:PutObject"],
+      "Resource": [
+        "arn:aws:s3:::my-bucket",
+        "arn:aws:s3:::my-bucket/*"
+      ]
+    }]
+  }'
+</code></pre>
+
+<p>Then assign the permission set to the user for a target account:</p>
+
+<pre><code>aws sso-admin create-account-assignment \
+  --instance-arn arn:aws:sso:::instance/ssoins-1234567890 \
+  --target-id 123456789012 \
+  --target-type AWS_ACCOUNT \
+  --permission-set-arn arn:aws:sso:::permissionSet/ssoins-1234567890/ps-abcdef \
+  --principal-type USER \
+  --principal-id &lt;user-id-from-identity-store&gt;
+</code></pre>
+
+<h2><span class="step-num">4</span>Configure AWS CLI for SSO</h2>
+
+<pre><code><span class="comment"># Run the guided SSO configuration</span>
+aws configure sso
+
+<span class="comment"># It will prompt for:</span>
+<span class="comment">#   SSO session name: my-sso</span>
+<span class="comment">#   SSO start URL:    https://d-1234567890.awsapps.com/start</span>
+<span class="comment">#   SSO region:       us-east-1</span>
+<span class="comment">#   SSO registration scopes: sso:account:access</span>
+</code></pre>
+
+<p>This creates entries in <code>~/.aws/config</code>. Your resulting profile looks like:</p>
+
+<pre><code>[profile my-dev]
+sso_session = my-sso
+sso_account_id = 123456789012
+sso_role_name = DevAccess
+region = us-east-1
+
+[sso-session my-sso]
+sso_start_url = https://d-1234567890.awsapps.com/start
+sso_region = us-east-1
+sso_registration_scopes = sso:account:access
+</code></pre>
+
+<p>Log in and verify:</p>
+
+<pre><code><span class="comment"># Authenticate via browser</span>
+aws sso login --profile my-dev
+
+<span class="comment"># Verify identity</span>
+aws sts get-caller-identity --profile my-dev
+</code></pre>
+
+<!-- ── Expandable Sub-Notes ────────────────────────────────── -->
+
+<div class="expandable">
+  <div class="expandable-header">
+    <span class="exp-arrow">&#9654;</span> Identity Policies
+  </div>
+  <div class="expandable-body">
+    <p>The SSO user's permissions come from the <strong>permission set</strong>, not from IAM policies attached to an IAM user. There is no IAM user created — SSO uses temporary STS credentials.</p>
+    <p>Key concepts:</p>
+    <ul>
+      <li><strong>Identity Store:</strong> Where users/groups live (managed by Identity Center)</li>
+      <li><strong>Permission Set:</strong> A collection of policies that map to an IAM role in each assigned account</li>
+      <li><strong>Account Assignment:</strong> Links a user/group + permission set to an AWS account</li>
+    </ul>
+    <p>When a user logs in via SSO, they assume a role like <code>AWSReservedSSO_DevAccess_abcdef1234</code> in the target account.</p>
+  </div>
+</div>
+
+<div class="expandable">
+  <div class="expandable-header">
+    <span class="exp-arrow">&#9654;</span> Permission Set Structure
+  </div>
+  <div class="expandable-body">
+    <p>A permission set can contain:</p>
+    <ul>
+      <li><strong>AWS Managed Policies:</strong> Pre-built policies like <code>AmazonSSMFullAccess</code></li>
+      <li><strong>Customer Managed Policies:</strong> Policies you've created in IAM</li>
+      <li><strong>Inline Policy:</strong> A single JSON policy embedded in the permission set</li>
+      <li><strong>Permissions Boundary:</strong> An upper limit on what the resulting role can do</li>
+    </ul>
+    <p>Best practice: use managed policies for broad access categories, inline policies for scoping (e.g., restricting S3 to specific buckets).</p>
+  </div>
+</div>
+
+<div class="expandable">
+  <div class="expandable-header">
+    <span class="exp-arrow">&#9654;</span> SOC2-Friendly Policy Minimums
+  </div>
+  <div class="expandable-body">
+    <p>For SOC2 compliance, follow least-privilege principles:</p>
+    <ul>
+      <li><strong>No wildcard resources:</strong> Always scope <code>Resource</code> to specific ARNs</li>
+      <li><strong>No <code>*</code> actions:</strong> Use specific actions like <code>ssm:StartSession</code> instead of <code>ssm:*</code></li>
+      <li><strong>Session duration:</strong> Keep under 8 hours; 4 hours is better</li>
+      <li><strong>MFA required:</strong> Enable MFA in Identity Center settings</li>
+      <li><strong>Audit trail:</strong> CloudTrail captures all SSO login events automatically</li>
+    </ul>
+    <p>Minimum viable policy set for a developer:</p>
+    <pre><code><span class="comment"># Instead of AmazonSSMFullAccess, scope to:</span>
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ssm:StartSession",
+        "ssm:TerminateSession",
+        "ssm:ResumeSession",
+        "ssm:DescribeSessions",
+        "ssm:GetConnectionStatus"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeVpcs"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::my-bucket",
+        "arn:aws:s3:::my-bucket/*"
+      ]
+    }
+  ]
+}</code></pre>
+  </div>
+</div>

@@ -1,0 +1,235 @@
+<h1>Creating a Micro EC2 Bastion (Amazon Linux 2023)</h1>
+
+<p>A tiny, SSM-managed EC2 instance used as a bastion for RDS tunneling, S3 access, and internal resource access. No SSH keys, no public IP, no open ports.</p>
+
+<h2><span class="step-num">1</span>Create the IAM Role for the Bastion</h2>
+
+<p>The bastion needs an instance profile with policies for SSM, RDS connectivity, and S3.</p>
+
+<pre><code><span class="comment"># Create the trust policy</span>
+cat &lt;&lt;'EOF' &gt; bastion-trust.json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": { "Service": "ec2.amazonaws.com" },
+    "Action": "sts:AssumeRole"
+  }]
+}
+EOF
+
+<span class="comment"># Create the role</span>
+aws iam create-role \
+  --role-name bastion-ssm-role \
+  --assume-role-policy-document file://bastion-trust.json
+
+<span class="comment"># Attach SSM managed policy</span>
+aws iam attach-role-policy \
+  --role-name bastion-ssm-role \
+  --policy-arn arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+<span class="comment"># Create instance profile and add role</span>
+aws iam create-instance-profile \
+  --instance-profile-name bastion-ssm-profile
+
+aws iam add-role-to-instance-profile \
+  --instance-profile-name bastion-ssm-profile \
+  --role-name bastion-ssm-role
+</code></pre>
+
+<h2><span class="step-num">2</span>Launch the Bastion Instance</h2>
+
+<pre><code><span class="comment"># Find the latest AL2023 AMI</span>
+AMI_ID=$(aws ssm get-parameter \
+  --name "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64" \
+  --query "Parameter.Value" --output text)
+
+<span class="comment"># Launch t3.micro (or t3.nano for even smaller)</span>
+aws ec2 run-instances \
+  --image-id $AMI_ID \
+  --instance-type t3.micro \
+  --iam-instance-profile Name=bastion-ssm-profile \
+  --subnet-id subnet-0abc123def456 \
+  --security-group-ids sg-0abc123def456 \
+  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=bastion-ssm}]' \
+  --metadata-options HttpTokens=required \
+  --no-associate-public-ip-address \
+  --count 1
+</code></pre>
+
+<div class="note-box">
+  <strong>Key flags:</strong>
+  <ul>
+    <li><code>--no-associate-public-ip-address</code> — no public IP, SSM connects via VPC endpoints or NAT</li>
+    <li><code>--metadata-options HttpTokens=required</code> — enforces IMDSv2 (SOC2 requirement)</li>
+    <li>No <code>--key-name</code> — no SSH keys needed, access is exclusively via SSM</li>
+  </ul>
+</div>
+
+<h2><span class="step-num">3</span>Attach Additional Policies</h2>
+
+<p>For RDS tunneling, the bastion itself doesn't need RDS IAM policies — it connects via standard TCP to the RDS endpoint within the VPC. The security group rules handle access.</p>
+
+<p>For S3 access from the bastion:</p>
+
+<pre><code><span class="comment"># Create an inline policy for scoped S3 access</span>
+cat &lt;&lt;'EOF' &gt; bastion-s3-policy.json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:PutObject"
+    ],
+    "Resource": [
+      "arn:aws:s3:::my-bucket",
+      "arn:aws:s3:::my-bucket/*"
+    ]
+  }]
+}
+EOF
+
+aws iam put-role-policy \
+  --role-name bastion-ssm-role \
+  --policy-name bastion-s3-access \
+  --policy-document file://bastion-s3-policy.json
+</code></pre>
+
+<h2><span class="step-num">4</span>Verify SSM Agent</h2>
+
+<p>Amazon Linux 2023 comes with SSM Agent pre-installed. Verify it's running:</p>
+
+<pre><code><span class="comment"># Check that the instance appears in SSM</span>
+aws ssm describe-instance-information \
+  --filters "Key=InstanceIds,Values=i-0abc123def456" \
+  --query "InstanceInformationList[0].{Id:InstanceId,Status:PingStatus,Agent:AgentVersion}"
+</code></pre>
+
+<p>Expected output shows <code>PingStatus: Online</code>. If the instance doesn't appear:</p>
+
+<ul>
+  <li>Verify the IAM role has <code>AmazonSSMManagedInstanceCore</code></li>
+  <li>Verify the subnet has a route to SSM endpoints (NAT gateway or VPC endpoints)</li>
+  <li>Wait 2-3 minutes after launch for the agent to register</li>
+</ul>
+
+<h2><span class="step-num">5</span>Connect via SSM</h2>
+
+<pre><code><span class="comment"># Start a session</span>
+aws ssm start-session \
+  --target i-0abc123def456 \
+  --profile my-dev
+</code></pre>
+
+<!-- ── Expandable Sub-Notes ────────────────────────────────── -->
+
+<div class="expandable">
+  <div class="expandable-header">
+    <span class="exp-arrow">&#9654;</span> Identity Policies
+  </div>
+  <div class="expandable-body">
+    <p>Your SSO identity (the human user) needs these permissions to use SSM and manage the bastion:</p>
+    <pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ssm:StartSession",
+        "ssm:TerminateSession",
+        "ssm:ResumeSession",
+        "ssm:DescribeSessions"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:instance/i-0abc123def456",
+        "arn:aws:ssm:*:*:document/AWS-StartSSHSession",
+        "arn:aws:ssm:*:*:document/AWS-StartPortForwardingSessionToRemoteHost"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances"
+      ],
+      "Resource": "*"
+    }
+  ]
+}</code></pre>
+  </div>
+</div>
+
+<div class="expandable">
+  <div class="expandable-header">
+    <span class="exp-arrow">&#9654;</span> EC2 Role Policies
+  </div>
+  <div class="expandable-body">
+    <p>The EC2 instance role (<code>bastion-ssm-role</code>) needs:</p>
+    <ul>
+      <li><strong>Required:</strong> <code>AmazonSSMManagedInstanceCore</code> — allows SSM Agent to communicate with the SSM service</li>
+      <li><strong>Optional:</strong> Scoped S3 access via inline policy (only the buckets you need)</li>
+      <li><strong>Not needed:</strong> RDS IAM policies for standard password-based RDS connections (the bastion just forwards TCP)</li>
+    </ul>
+    <p>Minimum role policy summary:</p>
+    <pre><code>Managed: AmazonSSMManagedInstanceCore
+Inline:  s3:GetObject, s3:ListBucket, s3:PutObject
+         (scoped to specific bucket ARNs)</code></pre>
+  </div>
+</div>
+
+<div class="expandable">
+  <div class="expandable-header">
+    <span class="exp-arrow">&#9654;</span> VPC, Subnet, and Security Group Requirements
+  </div>
+  <div class="expandable-body">
+    <h3>Subnet</h3>
+    <p>Place the bastion in a <strong>private subnet</strong> with a route to:</p>
+    <ul>
+      <li>A <strong>NAT Gateway</strong> (for SSM endpoint connectivity), OR</li>
+      <li><strong>VPC Endpoints</strong> for <code>ssm</code>, <code>ssmmessages</code>, and <code>ec2messages</code></li>
+    </ul>
+    <p>VPC Endpoints are preferred — they keep traffic off the internet entirely.</p>
+
+    <h3>Security Group — Bastion</h3>
+    <ul>
+      <li><strong>Inbound:</strong> No rules needed (SSM initiates outbound)</li>
+      <li><strong>Outbound:</strong> HTTPS (443) to SSM endpoints, plus TCP to RDS port (3306/5432) within the VPC</li>
+    </ul>
+
+    <h3>Security Group — RDS</h3>
+    <ul>
+      <li><strong>Inbound:</strong> Allow TCP on the database port from the bastion's security group</li>
+    </ul>
+
+    <pre><code><span class="comment"># Allow bastion to reach RDS on port 3306 (MariaDB/MySQL)</span>
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-rds-group-id \
+  --protocol tcp \
+  --port 3306 \
+  --source-group sg-bastion-group-id</code></pre>
+  </div>
+</div>
+
+<div class="expandable">
+  <div class="expandable-header">
+    <span class="exp-arrow">&#9654;</span> SOC2-Friendly Reasoning
+  </div>
+  <div class="expandable-body">
+    <p>This bastion design satisfies several SOC2 controls:</p>
+    <ul>
+      <li><strong>No SSH keys:</strong> Eliminates key management and rotation requirements</li>
+      <li><strong>No public IP:</strong> Instance is not directly reachable from the internet</li>
+      <li><strong>IMDSv2 enforced:</strong> Prevents SSRF-based credential theft</li>
+      <li><strong>SSM session logging:</strong> All sessions are logged to CloudTrail; optionally log to S3/CloudWatch</li>
+      <li><strong>Identity-based access:</strong> Who connects is tied to their SSO identity, not a shared key</li>
+      <li><strong>Least privilege:</strong> Bastion role has only SSM + scoped S3; no admin access</li>
+      <li><strong>No inbound ports:</strong> Security group has zero inbound rules</li>
+    </ul>
+    <p>Enable SSM session logging for audit trails:</p>
+    <pre><code><span class="comment"># In SSM &rarr; Session Manager &rarr; Preferences:</span>
+<span class="comment"># - Enable S3 logging (encrypted bucket)</span>
+<span class="comment"># - Enable CloudWatch logging</span>
+<span class="comment"># - Enable KMS encryption for sessions</span></code></pre>
+  </div>
+</div>
