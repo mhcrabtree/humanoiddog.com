@@ -51,6 +51,25 @@
       padding: 0 10px;
     }
 
+    .nav-links {
+      margin-top: 32px;
+    }
+
+    .nav-links a {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 300;
+      font-size: 1rem;
+      color: var(--footer);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+      border-bottom-color: var(--text);
+    }
+
     @media (max-width: 480px) {
       h1.slogan {
         font-size: 1.4rem;
@@ -84,6 +103,9 @@
   <div class="container">
     <img src="logo.png" alt="HumanoidDog" class="logo" />
     <h1 class="slogan">Powered by Curiosity</h1>
+    <div class="nav-links">
+      <a href="field-notes/">Field Notes</a>
+    </div>
   </div>
 
   <div class="footer">
