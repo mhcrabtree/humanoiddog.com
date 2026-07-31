@@ -380,6 +380,69 @@
       margin-right: 8px;
     }
 
+    /* Tooltips */
+    .tt {
+      position: relative;
+      border-bottom: 1px dotted var(--accent-dim);
+      cursor: help;
+    }
+
+    .tt .tt-bubble {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12px;
+      line-height: 1.5;
+      width: max-content;
+      max-width: 300px;
+      z-index: 500;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      white-space: normal;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+
+    .tt .tt-bubble::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: var(--border);
+    }
+
+    .tt:hover .tt-bubble {
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .tt .tt-bubble {
+        position: fixed;
+        bottom: auto;
+        top: auto;
+        left: 16px;
+        right: 16px;
+        transform: none;
+        width: auto;
+        max-width: none;
+        bottom: 80px;
+      }
+
+      .tt .tt-bubble::after {
+        display: none;
+      }
+    }
+
     /* Mobile nav toggle */
     .mobile-nav-toggle {
       display: none;
@@ -557,6 +620,7 @@
           if (xhr.status === 200) {
             inner.innerHTML = xhr.responseText;
             bindExpandables();
+            applyTooltips();
           } else {
             inner.innerHTML = '<div class="welcome"><h2>Not Found</h2><p>Could not load cheat: ' + escHtml(file) + '</p></div>';
           }
@@ -634,6 +698,104 @@
         root.style.setProperty(key, vars[key]);
       }
       document.querySelector('.theme-toggle').textContent = isDark ? 'light' : 'dark';
+    }
+
+    /* ── Glossary & Auto-Tooltips ──────────────────────────── */
+    var GLOSSARY = {
+      'bastion': 'A hardened jump host that acts as a secure gateway to reach internal resources in a private network. No direct access to backend systems is allowed — all traffic routes through here.',
+      'instance profile': 'An IAM container that passes an IAM role to an EC2 instance at launch, giving it permissions to call AWS services.',
+      'permission set': 'An Identity Center construct that bundles IAM policies together. When assigned to a user + account, it creates an IAM role the user can assume via SSO.',
+      'port forwarding': 'Redirecting network traffic from a local port on your machine through a secure tunnel to a port on a remote host, making the remote service accessible locally.',
+      'VPC endpoints': 'Private network connections between your VPC and AWS services. Traffic stays on the AWS backbone and never crosses the public internet.',
+      'VPC endpoint': 'A private network connection between your VPC and an AWS service. Traffic stays on the AWS backbone and never crosses the public internet.',
+      'NAT Gateway': 'A managed AWS service that lets instances in private subnets make outbound internet connections (e.g., to download updates) without being directly reachable from outside.',
+      'security group': 'A stateful virtual firewall attached to AWS resources. Rules control which inbound and outbound traffic is allowed by protocol, port, and source/destination.',
+      'security groups': 'Stateful virtual firewalls attached to AWS resources. Rules control which inbound and outbound traffic is allowed by protocol, port, and source/destination.',
+      'inline policy': 'An IAM policy embedded directly in a single role, user, or group — as opposed to a managed policy that can be shared across multiple entities.',
+      'trust policy': 'An IAM policy attached to a role that specifies which principals (users, services, accounts) are allowed to assume that role.',
+      'CloudTrail': 'AWS service that records API calls made in your account. Provides an audit log of who did what, when, and from where — essential for compliance.',
+      'SSO': 'Single Sign-On — log in once to get access to multiple AWS accounts and applications without re-entering credentials for each one.',
+      'SSM': 'AWS Systems Manager — a service for managing EC2 instances. Session Manager (part of SSM) provides secure shell access without SSH keys or open inbound ports.',
+      'EC2': 'Elastic Compute Cloud — AWS virtual servers. You launch instances of various sizes to run applications in the cloud.',
+      'IAM': 'Identity and Access Management — the AWS service that controls who can do what. Users, roles, and policies are all IAM constructs.',
+      'S3': 'Simple Storage Service — AWS object storage. Files (objects) live in buckets and are accessed via unique keys (paths).',
+      'RDS': 'Relational Database Service — managed database hosting. AWS handles backups, patching, and failover for engines like MySQL, MariaDB, and PostgreSQL.',
+      'VPC': 'Virtual Private Cloud — your isolated private network inside AWS. You control IP ranges, subnets, route tables, and gateways.',
+      'CLI': 'Command Line Interface — a terminal tool for interacting with AWS services by typing commands instead of clicking through the web console.',
+      'AMI': 'Amazon Machine Image — a snapshot template used to launch EC2 instances. Contains the OS, pre-installed software, and configuration.',
+      'STS': 'Security Token Service — issues temporary, limited-privilege credentials. SSO uses STS behind the scenes to give you short-lived access keys.',
+      'ARN': 'Amazon Resource Name — a unique identifier for any AWS resource. Format: arn:aws:service:region:account:resource-type/resource-id.',
+      'MFA': 'Multi-Factor Authentication — requires a second proof of identity (like a phone app code) beyond just a password. Strongly recommended for SOC2.',
+      'SOC2': 'Service Organization Control Type 2 — a compliance framework that audits how a company handles data security, availability, and confidentiality over time.',
+      'IMDSv2': 'Instance Metadata Service Version 2 — the secure way for EC2 instances to access their own metadata. Requires a session token, blocking SSRF-based credential theft.',
+      'SSRF': 'Server-Side Request Forgery — an attack where a server is tricked into making requests to internal resources. IMDSv2 mitigates this for EC2 metadata.',
+      'KMS': 'Key Management Service — AWS service for creating and managing encryption keys. Used to encrypt data at rest in S3, EBS, RDS, and other services.',
+      'AL2023': 'Amazon Linux 2023 — the latest Amazon-maintained Linux distribution, optimized for EC2. Comes with SSM Agent pre-installed.',
+      'TCP': 'Transmission Control Protocol — the reliable transport protocol that underlies HTTP, database connections, and most network services.',
+      'subnet': 'A segmented range of IP addresses within a VPC. Private subnets have no direct internet route; public subnets do.'
+    };
+
+    var SKIP_TAGS = { PRE: 1, CODE: 1, SCRIPT: 1, STYLE: 1 };
+
+    function applyTooltips() {
+      var container = document.getElementById('contentInner');
+      var terms = Object.keys(GLOSSARY).sort(function (a, b) {
+        return b.length - a.length;
+      });
+      var pattern = terms.map(function (t) {
+        return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }).join('|');
+      var regex = new RegExp('\\b(' + pattern + ')\\b', 'g');
+
+      var walker = document.createTreeWalker(
+        container,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode: function (node) {
+            var p = node.parentElement;
+            while (p && p !== container) {
+              if (SKIP_TAGS[p.tagName] || p.classList.contains('tt')) {
+                return NodeFilter.FILTER_REJECT;
+              }
+              p = p.parentElement;
+            }
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        }
+      );
+
+      var textNodes = [];
+      while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+      for (var i = 0; i < textNodes.length; i++) {
+        var node = textNodes[i];
+        var text = node.nodeValue;
+        if (!regex.test(text)) continue;
+        regex.lastIndex = 0;
+
+        var frag = document.createDocumentFragment();
+        var lastIdx = 0;
+        var match;
+        while ((match = regex.exec(text)) !== null) {
+          if (match.index > lastIdx) {
+            frag.appendChild(document.createTextNode(text.slice(lastIdx, match.index)));
+          }
+          var span = document.createElement('span');
+          span.className = 'tt';
+          span.textContent = match[0];
+          var bubble = document.createElement('span');
+          bubble.className = 'tt-bubble';
+          var key = match[0];
+          bubble.textContent = key + ' — ' + GLOSSARY[key];
+          span.appendChild(bubble);
+          frag.appendChild(span);
+          lastIdx = regex.lastIndex;
+        }
+        if (lastIdx < text.length) {
+          frag.appendChild(document.createTextNode(text.slice(lastIdx)));
+        }
+        node.parentNode.replaceChild(frag, node);
+      }
     }
 
     /* ── Init ───────────────────────────────────────────────── */
