@@ -232,6 +232,9 @@
       line-height: 1.7;
     }
 
+    .nav-footer { padding: 24px 20px 16px; font-size: 11px; color: var(--text-muted); }
+    .nav-footer a { color: inherit; }
+
     /* Index (landing view) */
     .index-list { list-style: none; margin: 8px 0 28px; }
     .content-inner .index-list li { margin: 0 0 14px; }
@@ -247,6 +250,21 @@
     .video-entry .entry-category { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
     .video-entry .entry-video { position: relative; aspect-ratio: 16 / 9; margin: 10px 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
     .video-entry iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+    /* Click-to-load YouTube (see ytFacade in the script) */
+    .yt-facade {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; aspect-ratio: 16 / 9; border: 0; margin: 0; padding: 0; cursor: pointer;
+      background: var(--bg-card); color: var(--text); font: inherit;
+    }
+    .yt-facade .yt-play {
+      width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
+      border: 2px solid var(--accent); color: var(--accent); font-size: 22px; padding-left: 4px;
+    }
+    .yt-facade .yt-note { font-size: 0.85rem; opacity: 0.75; }
+    .yt-facade:hover .yt-play, .yt-facade:focus-visible .yt-play { background: var(--accent); color: var(--bg-card); }
+    .video-entry .entry-video .yt-facade { height: 100%; aspect-ratio: auto; }
+    .video-entry .entry-video .yt-frame { width: 100%; height: 100%; border: 0; display: block; }
 
     /* Cheat content styles */
     .content-inner h1 {
@@ -646,6 +664,7 @@
         }
         html += '</div></div>';
       }
+      html += '<div class="nav-footer">&copy; 2026 <a href="https://craz.com">Crabtree Labz</a> · <a href="https://craz.com/privacy.html">Privacy</a></div>';
       nav.innerHTML = html;
     }
 
@@ -962,6 +981,21 @@
         node.parentNode.replaceChild(frag, node);
       }
     }
+
+    /* ── Click-to-load YouTube ──────────────────────────────
+       Video picks are <button class="yt-facade" data-youtube="ID">.
+       Nothing loads from YouTube until the visitor presses play. */
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('.yt-facade') : null;
+      if (!b) return;
+      var f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(b.getAttribute('data-youtube')) + '?autoplay=1&rel=0';
+      f.title = b.getAttribute('data-title') || 'Video';
+      f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      f.allowFullscreen = true;
+      f.className = 'yt-frame';
+      b.parentNode.replaceChild(f, b);
+    });
 
     /* ── Init ───────────────────────────────────────────────── */
     buildNav();
