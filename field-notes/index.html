@@ -232,6 +232,22 @@
       line-height: 1.7;
     }
 
+    /* Index (landing view) */
+    .index-list { list-style: none; margin: 8px 0 28px; }
+    .content-inner .index-list li { margin: 0 0 14px; }
+    .index-list a { color: var(--accent); text-decoration: none; font-size: 15px; }
+    .index-list a:hover { text-decoration: underline; }
+    .index-summary { display: block; color: var(--text); font-size: 13px; margin-top: 2px; }
+    .index-date, .content-inner .cheat-meta { display: block; color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+    .content-inner .cheat-meta { margin: -6px 0 20px; }
+
+    /* Video entries (Experiments I Love) */
+    .video-entry { margin: 36px 0; }
+    .content-inner .video-entry h2 { margin-top: 4px; }
+    .video-entry .entry-category { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .video-entry .entry-video { position: relative; aspect-ratio: 16 / 9; margin: 10px 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .video-entry iframe { width: 100%; height: 100%; border: 0; display: block; }
+
     /* Cheat content styles */
     .content-inner h1 {
       font-size: 1.4rem;
@@ -560,8 +576,7 @@
       <div class="content-inner" id="contentInner">
         <div class="welcome">
           <h2>Field Notes</h2>
-          <p>Select a cheat from the navigation to get started.</p>
-          <p>Workflows, commands, and configurations — all offline, all private.</p>
+          <p>Workflows, commands, and experiments.</p>
         </div>
       </div>
     </main>
@@ -572,15 +587,27 @@
   <script>
     /* ── Category & Cheat Registry ─────────────────────────────
        To add a new category, push an object to CATEGORIES.
-       Each cheat needs: id, title, file (path relative to this page).
+       Each cheat needs: id (also its link: field-notes/#id), title,
+       file (path relative to this page), summary (one line for the
+       index), and updated (YYYY-MM-DD, the last time it was checked).
     ───────────────────────────────────────────────────────────── */
     var CATEGORIES = [
       {
         name: 'AWS Workflows',
         cheats: [
-          { id: 'aws-sso-setup',       title: 'Setting Up AWS SSO (Identity Center)', file: 'cheats/aws-sso-setup.html' },
-          { id: 'aws-micro-bastion',    title: 'Creating a Micro EC2 Bastion (AL2023)',  file: 'cheats/aws-micro-bastion.html' },
-          { id: 'aws-ssm-cheat-sheet',  title: 'SSM Cheat Sheet',                        file: 'cheats/aws-ssm-cheat-sheet.html' }
+          { id: 'aws-sso-setup',       title: 'Setting Up AWS SSO (Identity Center)', file: 'cheats/aws-sso-setup.html',
+            summary: 'One identity, permission sets, and the AWS CLI signing in through SSO.', updated: '2026-07-30' },
+          { id: 'aws-micro-bastion',    title: 'Creating a Micro EC2 Bastion (AL2023)',  file: 'cheats/aws-micro-bastion.html',
+            summary: 'A tiny, locked-down jump host you reach through SSM, with no SSH keys or open ports.', updated: '2026-07-30' },
+          { id: 'aws-ssm-cheat-sheet',  title: 'SSM Cheat Sheet',                        file: 'cheats/aws-ssm-cheat-sheet.html',
+            summary: 'Session Manager commands: shells, port forwarding, and tunnels to RDS.', updated: '2026-07-30' }
+        ]
+      },
+      {
+        name: 'HumanoidDog Experiments',
+        cheats: [
+          { id: 'experiments-i-love',   title: 'Experiments I Love',                     file: 'cheats/experiments-i-love.html',
+            summary: 'Playful tech, clever builds, and creative mischief from people who build for fun.', updated: '2026-07-12' }
         ]
       }
       /* ── Future categories ──
@@ -594,10 +621,6 @@
       },
       {
         name: 'Software Tricks',
-        cheats: []
-      },
-      {
-        name: 'HumanoidDog Experiments',
         cheats: []
       }
       */
@@ -617,7 +640,7 @@
         html += '<div class="nav-cheats">';
         for (var j = 0; j < cat.cheats.length; j++) {
           var ch = cat.cheats[j];
-          html += '<a class="nav-cheat" data-id="' + ch.id + '" data-file="' + ch.file + '" onclick="loadCheat(this); return false;" href="#">';
+          html += '<a class="nav-cheat" data-id="' + ch.id + '" href="#' + ch.id + '">';
           html += escHtml(ch.title);
           html += '</a>';
         }
@@ -631,35 +654,83 @@
       cat.classList.toggle('open');
     }
 
-    function loadCheat(el) {
-      var id = el.getAttribute('data-id');
-      var file = el.getAttribute('data-file');
-
-      if (activeCheatId === id) return;
-
-      var all = document.querySelectorAll('.nav-cheat');
-      for (var i = 0; i < all.length; i++) all[i].classList.remove('active');
-      el.classList.add('active');
-      activeCheatId = id;
-
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', file, true);
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-          var inner = document.getElementById('contentInner');
-          if (xhr.status === 200) {
-            inner.innerHTML = xhr.responseText;
-            bindExpandables();
-            bindCopyButtons();
-            applyTooltips();
-          } else {
-            inner.innerHTML = '<div class="welcome"><h2>Not Found</h2><p>Could not load cheat: ' + escHtml(file) + '</p></div>';
-          }
-          document.getElementById('content').scrollTop = 0;
+    /* ── Routing: each cheat has its own link (field-notes/#id) ── */
+    function findCheat(id) {
+      for (var i = 0; i < CATEGORIES.length; i++) {
+        for (var j = 0; j < CATEGORIES[i].cheats.length; j++) {
+          if (CATEGORIES[i].cheats[j].id === id) return CATEGORIES[i].cheats[j];
         }
+      }
+      return null;
+    }
+
+    function route() {
+      var id = decodeURIComponent(location.hash.slice(1));
+      var cheat = id ? findCheat(id) : null;
+      var all = document.querySelectorAll('.nav-cheat');
+      for (var i = 0; i < all.length; i++) {
+        all[i].classList.toggle('active', !!cheat && all[i].getAttribute('data-id') === cheat.id);
+      }
+      closeMobileNav();
+      if (!cheat) {
+        activeCheatId = null;
+        showIndex(id);
+        return;
+      }
+      if (activeCheatId === cheat.id) return;
+      activeCheatId = cheat.id;
+      loadCheat(cheat);
+    }
+
+    function loadCheat(cheat) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', cheat.file, true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState !== 4) return;
+        var inner = document.getElementById('contentInner');
+        if (xhr.status === 200) {
+          inner.innerHTML = xhr.responseText;
+          var h1 = inner.querySelector('h1');
+          if (h1 && cheat.updated) {
+            var meta = document.createElement('p');
+            meta.className = 'cheat-meta';
+            meta.textContent = 'Updated ' + cheat.updated;
+            h1.parentNode.insertBefore(meta, h1.nextSibling);
+          }
+          document.title = cheat.title + ' — HumanoidDog Field Notes';
+          bindExpandables();
+          bindCopyButtons();
+          applyTooltips();
+        } else {
+          inner.innerHTML = '<div class="welcome"><h2>Not Found</h2><p>Could not load cheat: ' + escHtml(cheat.file) + '</p></div>';
+        }
+        document.getElementById('content').scrollTop = 0;
       };
       xhr.send();
-      closeMobileNav();
+    }
+
+    /* The landing view: every category and cheat, with summaries. */
+    function showIndex(missingId) {
+      document.title = 'HumanoidDog — Field Notes';
+      var html = '<div class="index">';
+      if (missingId) html += '<p class="note-box"><strong>Not found:</strong> there\'s no note called “' + escHtml(missingId) + '”. Here\'s everything that is.</p>';
+      html += '<h1>Field Notes</h1>';
+      html += '<p>Workflows, commands, and experiments: notes I keep so I don\'t have to figure things out twice.</p>';
+      for (var i = 0; i < CATEGORIES.length; i++) {
+        var cat = CATEGORIES[i];
+        if (!cat.cheats.length) continue;
+        html += '<h2>' + escHtml(cat.name) + '</h2><ul class="index-list">';
+        for (var j = 0; j < cat.cheats.length; j++) {
+          var ch = cat.cheats[j];
+          html += '<li><a href="#' + escHtml(ch.id) + '">' + escHtml(ch.title) + '</a>';
+          if (ch.summary) html += '<span class="index-summary">' + escHtml(ch.summary) + '</span>';
+          if (ch.updated) html += '<span class="index-date">Updated ' + escHtml(ch.updated) + '</span>';
+          html += '</li>';
+        }
+        html += '</ul>';
+      }
+      html += '</div>';
+      document.getElementById('contentInner').innerHTML = html;
     }
 
     function bindExpandables() {
@@ -895,6 +966,8 @@
     /* ── Init ───────────────────────────────────────────────── */
     buildNav();
     bindTooltipHovers();
+    window.addEventListener('hashchange', route);
+    route();
   </script>
 </body>
 </html>
