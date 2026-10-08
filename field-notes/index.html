@@ -622,6 +622,13 @@
         ]
       },
       {
+        name: 'SOC 2 Field Notes',
+        cheats: [
+          { id: 'byod-generally-a-bad-idea', title: 'BYOD: Generally, a Bad Idea', file: 'cheats/byod-generally-a-bad-idea.html',
+            summary: 'What you give up, in privacy and risk, when you enroll a personal device for work.', updated: '2026-10-08' }
+        ]
+      },
+      {
         name: 'HumanoidDog Experiments',
         cheats: [
           { id: 'experiments-i-love',   title: 'Experiments I Love',                     file: 'cheats/experiments-i-love.html',
@@ -910,7 +917,10 @@
       'STS': 'Security Token Service — issues temporary, limited-privilege credentials. SSO uses STS behind the scenes to give you short-lived access keys.',
       'ARN': 'Amazon Resource Name — a unique identifier for any AWS resource. Format: arn:aws:service:region:account:resource-type/resource-id.',
       'MFA': 'Multi-Factor Authentication — requires a second proof of identity (like a phone app code) beyond just a password. Strongly recommended for SOC2.',
-      'SOC2': 'Service Organization Control Type 2 — a compliance framework that audits how a company handles data security, availability, and confidentiality over time.',
+      'BYOD': 'Bring Your Own Device: doing your job on a phone or laptop you own, instead of one your employer issues.',
+      'MDM': 'Mobile Device Management: software that puts a management profile on a device so an organization can set rules, install apps, and remove work data remotely.',
+      'SOC 2': 'Service Organization Control 2: an independent audit of the controls a company says it uses to protect customer data.',
+      'SOC2':'Service Organization Control Type 2 — a compliance framework that audits how a company handles data security, availability, and confidentiality over time.',
       'IMDSv2': 'Instance Metadata Service Version 2 — the secure way for EC2 instances to access their own metadata. Requires a session token, blocking SSRF-based credential theft.',
       'SSRF': 'Server-Side Request Forgery — an attack where a server is tricked into making requests to internal resources. IMDSv2 mitigates this for EC2 metadata.',
       'KMS': 'Key Management Service — AWS service for creating and managing encryption keys. Used to encrypt data at rest in S3, EBS, RDS, and other services.',

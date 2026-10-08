@@ -1,0 +1,102 @@
+<h1>BYOD: Generally, a Bad Idea</h1>
+
+<p>For seven years I did my job from a personal MacBook, iPhone, and iPad. Then our tech team was tasked with making our systems SOC 2 compliant, and I learned what that would ask of those devices. I requested a work-issued MacBook, and after some resistance it was approved.</p>
+
+<p>Moving off my iPhone was the hard part. Slack and email on the go were gone, and so were the authenticator apps I used for two-factor sign-in (Authy and Google Authenticator); a YubiKey workflow replaced them. I gave up real conveniences, and I would make the same call again, because that boundary should not have been crossed in the first place.</p>
+
+<p>Bring your own device (BYOD) means doing your job on a phone or laptop you own and pay for. It offers you convenience, but it hands your employer management authority over your device: depending on how it is configured, that can range from managing work apps to erasing the whole phone. In my view, BYOD is generally a bad idea, because your employer gets the savings while you take on the cost and the risk, and because mixing personal and work use blurs a boundary that is hard to restore.</p>
+
+<p>This article is for employees who have been asked to enroll a personal device. It covers three things that decide whether the trade is fair.</p>
+
+<ol>
+  <li>What SOC 2 asks of your device</li>
+  <li>What MDM can see and do on it</li>
+  <li>What you give up when you enroll</li>
+</ol>
+
+<h2><span class="step-num">1</span>What SOC 2 Asks of Your Device</h2>
+
+<h3>What an audit covers</h3>
+
+<p>The AICPA describes System and Organization Controls (SOC) as <a href="https://www.aicpa-cima.com/resources/landing/system-and-organization-controls-soc-suite-of-services" target="_blank" rel="noopener">"a suite of service offerings CPAs may provide in connection with system-level controls of a service organization."</a> A SOC 2 report covers controls relevant to security, availability, processing integrity, confidentiality, or privacy. The company writes a description of its system and the controls it uses, and the auditor tests whether those controls are designed well (Type 1) or operated effectively over a period of time (Type 2), according to <a href="https://www.venn.com/learn/soc2-compliance/soc2-report/" target="_blank" rel="noopener">Venn's overview of a SOC 2 report</a>.</p>
+
+<h3>What SOC 2 does not prescribe</h3>
+
+<p>One practitioner guide states that <a href="https://oneuptime.com/blog/post/2026-08-04-soc-2-contractors-byod-remote-teams/view" target="_blank" rel="noopener">SOC 2 has no universal rule that every device must be company-owned</a>. The company decides how to protect its data, and the auditor tests what the company says it does. The criteria most often tied to devices are the logical and physical access group, CC6.1 through CC6.8 (<a href="https://www.barradvisory.com/blog/whats-new-with-soc-2" target="_blank" rel="noopener">Barr Advisory</a>).</p>
+
+<p>A company that allows personal devices still has to show it controls access to its data on them. Vendors that sell this software say auditors look for evidence such as <a href="https://blog.getagency.com/articles/byod-security-for-soc-2" target="_blank" rel="noopener">enrollment, baseline settings, and revocation</a>, and that removing company data when someone leaves is <a href="https://www.venn.com/use-cases/soc-2-byod/" target="_blank" rel="noopener">hard to prove</a>. Management software is the common answer, which is why it lands on your phone.</p>
+
+<p>Many employers choose not to allow personal devices at all. In Verizon's <a href="https://www.verizon.com/business/resources/T550/reports/2025-mobile-security-index.pdf" target="_blank" rel="noopener">2025 Mobile Security Index</a>, a survey of 762 professionals, 55% of organizations said they provide company-owned devices, 19% use a mix, and 25% allow personal devices. The same report says 70% of mobile devices hit by an attack were personal, not corporate-issued; that does not show personal devices are riskier one for one, because the report does not say how many devices of each kind were in use.</p>
+
+<h3>What the explanation leaves out</h3>
+
+<p>The sources I reviewed describe audit evidence as enrollment records and removal of company data. I found nothing that makes an employee's understanding of the trade part of that evidence. In my view, that is why the explanation often shrinks to a policy you click to accept.</p>
+
+<h2><span class="step-num">2</span>What MDM Can See and Do on It</h2>
+
+<h3>What MDM is</h3>
+
+<p>Mobile device management (MDM) is software that puts a management profile on your device and takes instructions from your employer's server. The company uses it to require a passcode and encryption, install work apps, and remove them again. On a personally owned Apple device, the preferred mode is User Enrollment, where Apple says IT can manage <a href="https://support.apple.com/guide/deployment/user-enrollment-and-device-management-dep23db2037d/web" target="_blank" rel="noopener">only an organization's accounts, settings, and information</a>, never a personal account, and can apply only a limited set of restrictions.</p>
+
+<h3>What the enrollment type decides</h3>
+
+<p>Microsoft's Intune documentation lists what the organization <a href="https://learn.microsoft.com/en-us/intune/user-help/enrollment/data-visibility" target="_blank" rel="noopener">can never see</a>: calling and web browsing history, email and text messages, contacts, calendar, passwords, pictures, and the content of your documents. It can always see the device owner, name, serial number, model, manufacturer, operating system version, and IMEI. On a personal device it can also see the last four digits of your phone number and your managed app inventory, but not your location.</p>
+
+<p>Microsoft adds that <a href="https://learn.microsoft.com/en-us/intune/user-help/enrollment/data-visibility" target="_blank" rel="noopener">some configurations let organizations see more than the managed apps</a> on a personal device. Apple's full Device Enrollment is built for organization-owned devices and includes <a href="https://support.apple.com/guide/deployment/device-enrollment-and-device-management-depd1c27dfe6/web" target="_blank" rel="noopener">the ability to erase the device</a>.</p>
+
+<div class="note-box">
+  <strong>Note:</strong> "We use MDM" tells you very little. The limits above belong to the enrollment type your employer picks, and the employer picks it, not you.
+</div>
+
+<h3>What employees worry about</h3>
+
+<p>A 2012 Harris survey of 2,243 enterprise workers, commissioned by MDM vendor Fiberlink, found that <a href="https://www.datamation.com/trends/survey-highlights-employee-concerns-about-byod/" target="_blank" rel="noopener">76% would not give their employer access to the apps installed on a personal device</a>, and 75% would not allow an app that locates them in exchange for corporate access. The survey is old and vendor-sponsored, so treat the numbers as a signal, not a measurement. The signal matches the Microsoft list: app inventory and location are the lines people care about.</p>
+
+<h2><span class="step-num">3</span>What You Give Up When You Enroll</h2>
+
+<h3>Control of your own device</h3>
+
+<p>You accept rules on something you own: a passcode policy, required updates, and restrictions on some settings. A 2015 Harris poll of more than 3,500 mobile workers, commissioned by MDM vendor MobileIron, found that <a href="https://www.networkworld.com/article/940906/byod-users-worry-employers-cant-keep-private-data-safe.html" target="_blank" rel="noopener">only 61% believed their employer could keep their personal information private</a>, and 30% said they would quit if their employer could view it. Your employer may well respect the limits it describes; the point is that those limits come from its configuration, which it can change, and from its word.</p>
+
+<h3>Exposure to legal and data-loss risk</h3>
+
+<p>Most courts treat work data on personal devices as <a href="https://www.natlawreview.com/article/employer-e-discovery-duties-expand-byod-environment-re-employee-devices" target="_blank" rel="noopener">subject to the same preservation duties as other electronic data</a>. If your employer faces a lawsuit, it may have to preserve and collect work-related data from your phone, and you may be asked to cooperate. The reverse risk is a remote action: on a device enrolled more broadly than you expected, the management server may be able to erase everything, not just work data.</p>
+
+<h3>Cost you may not recover</h3>
+
+<p>You pay for the device, the plan, and the repairs. In California, the Court of Appeal held in <a href="https://caselaw.findlaw.com/ca-court-of-appeal/1675681.html" target="_blank" rel="noopener">Cochran v. Schwan's Home Service (2014)</a> that an employer must reimburse a reasonable percentage of the phone bill when employees are required to use a personal phone for work, in a case covering about 1,500 service managers. Other states differ, and the ruling concerns required use, so a voluntary BYOD program may fall outside it.</p>
+
+<h2>Your Task</h2>
+
+<p>BYOD is a trade, and your employer sets the terms. You get one fewer device to carry; your employer gets management authority over a device it did not buy, and a smaller hardware bill. Decide on purpose, before you tap Accept.</p>
+
+<p>Before you enroll, put these five questions to your IT team and keep the answers in writing:</p>
+
+<ol>
+  <li>Which enrollment type do you use, and what can you see on my device?</li>
+  <li>What can you do remotely: remove only work data, or erase the whole device?</li>
+  <li>What happens to my device in a legal hold or an investigation?</li>
+  <li>What will this cost me, and do you offer a stipend or reimbursement?</li>
+  <li>What happens to my device when I leave, and which company-issued device is the alternative?</li>
+</ol>
+
+<p>If every answer is clear, written, and acceptable to you, BYOD can be a fair choice. If any answer is vague, ask for a company device or carry a separate low-cost phone for work, and keep your personal device yours. Asking for a company device is a reasonable request, not a difficult one.</p>
+
+<h2>Sources</h2>
+
+<ul>
+  <li>AICPA &amp; CIMA, <a href="https://www.aicpa-cima.com/resources/landing/system-and-organization-controls-soc-suite-of-services" target="_blank" rel="noopener">System and Organization Controls (SOC) Suite of Services</a></li>
+  <li>Venn, <a href="https://www.venn.com/learn/soc2-compliance/soc2-report/" target="_blank" rel="noopener">SOC 2 report overview</a> and <a href="https://www.venn.com/use-cases/soc-2-byod/" target="_blank" rel="noopener">SOC 2 and BYOD</a> (vendor)</li>
+  <li>OneUptime, <a href="https://oneuptime.com/blog/post/2026-08-04-soc-2-contractors-byod-remote-teams/view" target="_blank" rel="noopener">SOC 2 for Contractors, BYOD, and Remote Teams</a> (practitioner blog)</li>
+  <li>Verizon, <a href="https://www.verizon.com/business/resources/T550/reports/2025-mobile-security-index.pdf" target="_blank" rel="noopener">2025 Mobile Security Index</a> (survey of 762 professionals; Verizon sells mobile security services)</li>
+  <li>Barr Advisory, <a href="https://www.barradvisory.com/blog/whats-new-with-soc-2" target="_blank" rel="noopener">What's New with SOC 2</a></li>
+  <li>Agency, <a href="https://blog.getagency.com/articles/byod-security-for-soc-2" target="_blank" rel="noopener">BYOD Security for SOC 2</a> (vendor)</li>
+  <li>Apple, <a href="https://support.apple.com/guide/deployment/user-enrollment-and-device-management-dep23db2037d/web" target="_blank" rel="noopener">User Enrollment and device management</a> and <a href="https://support.apple.com/guide/deployment/device-enrollment-and-device-management-depd1c27dfe6/web" target="_blank" rel="noopener">Device Enrollment and device management</a></li>
+  <li>Microsoft Learn, <a href="https://learn.microsoft.com/en-us/intune/user-help/enrollment/data-visibility" target="_blank" rel="noopener">What info can your organization see when you enroll your device?</a></li>
+  <li>Datamation, <a href="https://www.datamation.com/trends/survey-highlights-employee-concerns-about-byod/" target="_blank" rel="noopener">Survey Highlights Employee Concerns About BYOD</a> (Harris/Fiberlink, 2012)</li>
+  <li>Network World, <a href="https://www.networkworld.com/article/940906/byod-users-worry-employers-cant-keep-private-data-safe.html" target="_blank" rel="noopener">BYOD users worry employers can't keep private data safe</a> (Harris/MobileIron, 2015)</li>
+  <li>National Law Review, <a href="https://www.natlawreview.com/article/employer-e-discovery-duties-expand-byod-environment-re-employee-devices" target="_blank" rel="noopener">Employer e-discovery duties expand in a BYOD environment</a></li>
+  <li>Cochran v. Schwan's Home Service, Inc., <a href="https://caselaw.findlaw.com/ca-court-of-appeal/1675681.html" target="_blank" rel="noopener">California Court of Appeal (2014)</a></li>
+</ul>
+
+<p class="cheat-meta">Last edited: October 8, 2026. General information, not legal advice.</p>
