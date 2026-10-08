@@ -651,6 +651,18 @@
       */
     ];
 
+    /* Byline on every note (the site's author name, never a real name). */
+    var AUTHOR = 'HumanoidDog Engineer';
+
+    /* '2026-10-08' -> 'October 8, 2026' */
+    function fullDate(iso) {
+      var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+      if (!m) return iso;
+      var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+                    'August', 'September', 'October', 'November', 'December'];
+      return months[parseInt(m[2], 10) - 1] + ' ' + parseInt(m[3], 10) + ', ' + m[1];
+    }
+
     var activeCheatId = null;
 
     function buildNav() {
@@ -720,7 +732,7 @@
           if (h1 && cheat.updated) {
             var meta = document.createElement('p');
             meta.className = 'cheat-meta';
-            meta.textContent = 'Updated ' + cheat.updated;
+            meta.textContent = 'By ' + AUTHOR + ' \u00b7 Last edited ' + fullDate(cheat.updated);
             h1.parentNode.insertBefore(meta, h1.nextSibling);
           }
           document.title = cheat.title + ' — HumanoidDog Field Notes';
@@ -750,7 +762,7 @@
           var ch = cat.cheats[j];
           html += '<li><a href="#' + escHtml(ch.id) + '">' + escHtml(ch.title) + '</a>';
           if (ch.summary) html += '<span class="index-summary">' + escHtml(ch.summary) + '</span>';
-          if (ch.updated) html += '<span class="index-date">Updated ' + escHtml(ch.updated) + '</span>';
+          if (ch.updated) html += '<span class="index-date">By ' + escHtml(AUTHOR) + ' \u00b7 Last edited ' + escHtml(fullDate(ch.updated)) + '</span>';
           html += '</li>';
         }
         html += '</ul>';
