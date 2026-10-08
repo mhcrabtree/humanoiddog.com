@@ -1,0 +1,100 @@
+<h1>SOC 2 Explained: What It Is and What It Changes</h1>
+
+<p>When my employer first said we were pursuing SOC 2, I had no idea what it was. I assumed it was SOX, which I already knew, and I was wrong. Once I learned what was really involved, I panicked.</p>
+
+<p>At first my productivity tanked: new techniques, new skills, new policies. We retired our SSH suite and moved to AWS Systems Manager (SSM), and with the help of custom AI tools I rebuilt my workflow into something efficient. I'm still not the greatest fan of SOC 2, but I think the practices are a net positive, and I think my panic was warranted.</p>
+
+<p>SOC 2 is a voluntary audit report on how a company protects its customers' data. It is not a law and not a certificate, but the work behind it is real, and it changes how everyone in the company does their job. In my view, no one can keep doing business as usual once a company commits to it.</p>
+
+<p>This article is for employees whose company has just announced SOC 2, and it covers three things worth knowing before the work starts.</p>
+
+<ol>
+  <li>What SOC 2 is, and what it is not</li>
+  <li>Who uses SOC 2, and whether it works</li>
+  <li>What SOC 2 changes for you</li>
+</ol>
+
+<h2><span class="step-num">1</span>What SOC 2 Is, and What It Is Not</h2>
+
+<h3>It is a report, not a certificate</h3>
+
+<p>The AICPA describes System and Organization Controls (SOC) as <a href="https://www.aicpa-cima.com/resources/landing/system-and-organization-controls-soc-suite-of-services" target="_blank" rel="noopener">"a suite of service offerings CPAs may provide in connection with system-level controls of a service organization."</a> A CPA firm examines the controls a company says it has and issues an opinion. One audit firm puts it bluntly: a SOC 2 is technically an attestation report, and <a href="https://linfordco.com/blog/what-is-soc-2/" target="_blank" rel="noopener">"it's not a certification."</a> A Type 1 report tests the design of the controls at one point in time; a Type 2 report tests how they operated over a period, usually 12 months.</p>
+
+<h3>It is a market expectation, not a law</h3>
+
+<p>Secureframe, a compliance vendor, states that <a href="https://secureframe.com/blog/who-needs-a-soc-2-report" target="_blank" rel="noopener">"SOC 2 reports are not legally required."</a> The need comes from customers: Vanta's 2025 Trust Maturity Report says <a href="https://invitenetworks.com/soc-2-compliance-for-mid-market-companies-what-it-takes-to-get-audit-read/" target="_blank" rel="noopener">83% of enterprise buyers require a SOC 2 report before signing with a new vendor</a>, rising to 91% at companies with more than 5,000 employees. Vanta sells compliance software, and the page does not give the sample size, so read the number as a signal of how buyers behave.</p>
+
+<p>This is also where I made my mistake. SOX is a law: the Sarbanes-Oxley Act was enacted in 2002 after the Enron and WorldCom scandals, and its Section 404 <a href="https://www.sec.gov/news/studies/2009/sox-404_study.pdf" target="_blank" rel="noopener">requires public company management to assess and report on its internal control over financial reporting</a>, with an independent auditor attesting to that assessment. SOC 2 is about protecting customer data, and nothing requires a company to do it.</p>
+
+<h3>It is a framework, not a checklist</h3>
+
+<p>SOC 2 does not hand a company a list of steps. The same audit firm says there is no checklist, because the criteria <a href="https://linfordco.com/blog/what-is-soc-2/" target="_blank" rel="noopener">"may be met in a variety of ways,"</a> so each company chooses the controls it will be tested on. That is why two companies with SOC 2 reports can run very differently.</p>
+
+<p>It also does not guarantee security. In the audit firm's words, <a href="https://linfordco.com/blog/what-is-soc-2/" target="_blank" rel="noopener">"SOC 2 compliance does not ensure data security."</a> A report shows that the basics were in place and operating; it does not promise that nothing will go wrong.</p>
+
+<h2><span class="step-num">2</span>Who Uses SOC 2, and Whether It Works</h2>
+
+<h3>Who uses it, and who does not</h3>
+
+<p>SOC 2 is aimed at service organizations that handle customer data, and it is <a href="https://secureframe.com/blog/who-needs-a-soc-2-report" target="_blank" rel="noopener">especially expected of SaaS providers and cloud-based businesses</a>. Secureframe's 2026 benchmark report found that <a href="https://www.brightdefense.com/resources/soc-2-statistics/" target="_blank" rel="noopener">61% of respondents needed compliance to win or renew a contract</a>. That survey covers several frameworks, not SOC 2 alone.</p>
+
+<p>Other organizations use a different report or none. Secureframe points providers whose services affect a customer's financial reporting, such as payroll, to a SOC 1 report; audiences who do not need system detail to a public SOC 3 report; and manufacturers and distributors to a SOC for Supply Chain report. A company with no customer data to protect, or no business customers asking, has little reason to run an audit.</p>
+
+<h3>How trendy it is</h3>
+
+<p>The strongest demand figures come from companies that sell SOC 2 software, which is worth knowing before you repeat them. I found no independent count of how many companies hold a SOC 2 report, and one often-repeated adoption figure had no traceable source, so I left it out. The demand is real, but the numbers are better read as a sales signal than a measurement.</p>
+
+<h3>How practical it is</h3>
+
+<p>The practical case is the cost of getting security wrong. IBM's 2025 study of 600 organizations, conducted by the Ponemon Institute, put the <a href="https://newsroom.ibm.com/2025-07-30-ibm-report-13-of-organizations-reported-breaches-of-ai-models-or-applications,-97-of-which-reported-lacking-proper-ai-access-controls" target="_blank" rel="noopener">global average cost of a breach at $4.44 million and the U.S. average at a record $10.22 million</a>. Verizon's 2025 Data Breach Investigations Report, covering over 22,000 incidents and 12,195 confirmed breaches, found that <a href="https://www.verizon.com/about/news/2025-data-breach-investigations-report" target="_blank" rel="noopener">third-party involvement doubled to 30%</a>, with credential abuse (22%) and exploited vulnerabilities (20%) the leading ways in.</p>
+
+<p>Those are the areas SOC 2 controls cover: who has access, how vulnerabilities are handled, and how vendors are vetted. I found no study showing that holding a SOC 2 report lowers a company's breach rate, so I treat it as a reasonable discipline, not a proven shield. In my experience the discipline is worth having.</p>
+
+<h2><span class="step-num">3</span>What SOC 2 Changes for You</h2>
+
+<h3>Your workflow changes</h3>
+
+<p>Expect new tools and a slower start. Retiring our SSH suite for SSM meant relearning routine tasks, and my output dropped before it recovered. A 2026 study of 75 completed examinations, reported by Bright Defense, found that <a href="https://www.brightdefense.com/resources/soc-2-statistics/" target="_blank" rel="noopener">first-time audits took a median of 9 weeks of fieldwork against 7 for renewals, with 2.1 rounds of evidence clarification against 1.3</a>. The first pass is the hardest for the auditors and for the people who produce the evidence.</p>
+
+<p>AI tools helped me through it, and I doubt I would have managed as well without custom ones. They carry their own risk, though: IBM found that <a href="https://newsroom.ibm.com/2025-07-30-ibm-report-13-of-organizations-reported-breaches-of-ai-models-or-applications,-97-of-which-reported-lacking-proper-ai-access-controls" target="_blank" rel="noopener">97% of the organizations that reported a breach of an AI model or application had no AI access controls in place</a>. Ask which AI tools are approved before you put work data into one.</p>
+
+<h3>Your shortcuts end</h3>
+
+<p>A Type 2 report tests controls over a period, usually 12 months, not on one good day. In my view, that means a shortcut that used to be harmless, such as a shared login or a manual fix in production, becomes something an auditor can find. People who assume they can work as before are the ones who run into trouble.</p>
+
+<p>I also think management sometimes softens the specifics to keep the peace and avoid panic. I understand the instinct, but I would rather have been told early, because my panic led me to learn the details. Ask for the specifics of what changes in your role.</p>
+
+<h3>Your devices are in scope</h3>
+
+<p>Any device that reaches company systems can fall inside the audit, including a personal phone used only for sign-in. I now keep my work equipment completely separate from my personal devices. The reasons and the risks are in the <a href="#byod-generally-a-bad-idea">BYOD field note</a>.</p>
+
+<h2>Your Task</h2>
+
+<p>SOC 2 is not a law, a certificate, or a guarantee; it is a CPA's report on whether your company does what it says it does to protect customer data. It is also a real change in how you work, and the best response is to take it seriously and get specific. I did, and I am better for it.</p>
+
+<p>Before your company's audit period starts, put these five items on your list:</p>
+
+<ol>
+  <li>Ask which systems, accounts, and devices in your role are in scope.</li>
+  <li>Ask which of your current habits the new policies replace.</li>
+  <li>Ask when the audit period starts and what evidence you are expected to leave behind.</li>
+  <li>Ask which AI tools are approved before you use them on work data.</li>
+  <li>Read the policies once in full, and keep a copy.</li>
+</ol>
+
+<p>If an answer is vague, ask again, and ask in writing. Your company is about to be tested on what its people do, and you are one of those people.</p>
+
+<h2>Sources</h2>
+
+<ul>
+  <li>AICPA &amp; CIMA, <a href="https://www.aicpa-cima.com/resources/landing/system-and-organization-controls-soc-suite-of-services" target="_blank" rel="noopener">System and Organization Controls (SOC) Suite of Services</a></li>
+  <li>Linford &amp; Company, <a href="https://linfordco.com/blog/what-is-soc-2/" target="_blank" rel="noopener">What is SOC 2?</a> (CPA firm)</li>
+  <li>Secureframe, <a href="https://secureframe.com/blog/who-needs-a-soc-2-report" target="_blank" rel="noopener">Do You Need a SOC 2 Report?</a> (vendor)</li>
+  <li>Invite Networks, <a href="https://invitenetworks.com/soc-2-compliance-for-mid-market-companies-what-it-takes-to-get-audit-read/" target="_blank" rel="noopener">SOC 2 Compliance for Mid-Market Companies</a>, citing Vanta's 2025 Trust Maturity Report (vendor)</li>
+  <li>Bright Defense, <a href="https://www.brightdefense.com/resources/soc-2-statistics/" target="_blank" rel="noopener">SOC 2 Compliance Statistics</a>, citing Secureframe's 2026 Benchmark Report and a 2026 Lazarus Alliance study (vendor compilation)</li>
+  <li>U.S. Securities and Exchange Commission, <a href="https://www.sec.gov/news/studies/2009/sox-404_study.pdf" target="_blank" rel="noopener">Study of the Sarbanes-Oxley Act of 2002 Section 404</a> (2009)</li>
+  <li>IBM, <a href="https://newsroom.ibm.com/2025-07-30-ibm-report-13-of-organizations-reported-breaches-of-ai-models-or-applications,-97-of-which-reported-lacking-proper-ai-access-controls" target="_blank" rel="noopener">Cost of a Data Breach Report 2025</a> (press release; Ponemon Institute study)</li>
+  <li>Verizon, <a href="https://www.verizon.com/about/news/2025-data-breach-investigations-report" target="_blank" rel="noopener">2025 Data Breach Investigations Report</a> (press release; Verizon also sells security services)</li>
+</ul>
+
+<p class="cheat-meta">General information, not legal or audit advice.</p>
